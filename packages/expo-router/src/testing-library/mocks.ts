@@ -1,9 +1,16 @@
 /*
- * Optionally enable @testing-library/jest-native/extend-expect. We use this internally for the `toBeOnTheScreen` matcher()
+ * Optionally enable @testing-library/react-native/extend-expect (available since RNTL v12.4.0). We use this internally for the `toBeOnTheScreen` matcher()
  */
 try {
-  require('@testing-library/jest-native/extend-expect');
-} catch {}
+  require('@testing-library/react-native/extend-expect');
+} catch {
+  /*
+  * Alternatively enable @testing-library/jest-native/extend-expect (for RNTL < v12.4.0).
+  */
+  try {
+    require('@testing-library/jest-native/extend-expect');
+  } catch {}
+}
 
 // include this section and the NativeAnimatedHelper section for mocking react-native-reanimated
 jest.mock('react-native-reanimated', () => {
