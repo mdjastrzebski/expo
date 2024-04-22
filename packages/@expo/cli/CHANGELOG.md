@@ -15,6 +15,7 @@
 ### 🐛 Bug fixes
 
 - Fixed `TypeError: osascript(...) is not a function` when pressing "j" to open JS debugger. ([#28315](https://github.com/expo/expo/pull/28315) by [@kudo](https://github.com/kudo))
+- Allow platform extensions for layout and route files ([#27408](https://github.com/expo/expo/pull/27408) by [@marklawlor](https://github.com/marklawlor))
 
 ## 0.18.0 — 2024-04-18
 
