@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { adjustPathname } from '../fork/extractPathFromURL';
 import getPathFromState from '../fork/getPathFromState';
 import getStateFromPath from '../fork/getStateFromPath';
+import { NativeIntent } from '../types';
 
 const isExpoGo = typeof expo !== 'undefined' && globalThis.expo?.modules?.ExpoGo;
 
@@ -68,33 +69,42 @@ export function getRootURL(): string {
   return _rootURL;
 }
 
-export function addEventListener(listener: (url: string) => void) {
-  let callback: (({ url }: { url: string }) => void) | undefined;
+export function addEventListener(nativeLinking?: NativeIntent) {
+  return (listener: (url: string) => void) => {
+    let callback: (({ url }: { url: string }) => void) | undefined;
 
-  if (isExpoGo) {
-    // This extra work is only done in the Expo Go app.
-    callback = ({ url }: { url: string }) => {
-      const parsed = Linking.parse(url);
+    if (isExpoGo) {
+      // This extra work is only done in the Expo Go app.
+      callback = async ({ url }: { url: string }) => {
+        const parsed = Linking.parse(url);
 
-      // If the URL is defined (default in Expo Go dev apps) and the URL has no path:
-      // `exp://192.168.87.39:19000/` then use the default `exp://192.168.87.39:19000/--/`
-      if (
-        parsed.path === null ||
-        ['', '/'].includes(adjustPathname({ hostname: parsed.hostname, pathname: parsed.path }))
-      ) {
-        listener(getRootURL());
-      } else {
+        // If the URL is defined (default in Expo Go dev apps) and the URL has no path:
+        // `exp://192.168.87.39:19000/` then use the default `exp://192.168.87.39:19000/--/`
+        if (
+          parsed.path === null ||
+          ['', '/'].includes(adjustPathname({ hostname: parsed.hostname, pathname: parsed.path }))
+        ) {
+          url = getRootURL();
+        }
+
+        if (nativeLinking?.redirectSystemPath) {
+          const redirectUrl = await nativeLinking.redirectSystemPath({ path: url, initial: false });
+          if (redirectUrl) {
+            url = redirectUrl;
+          }
+        }
+
         listener(url);
-      }
-    };
-  } else {
-    callback = ({ url }: { url: string }) => listener(url);
-  }
-  const subscription = Linking.addEventListener('url', callback);
+      };
+    } else {
+      callback = ({ url }: { url: string }) => listener(url);
+    }
+    const subscription = Linking.addEventListener('url', callback);
 
-  return () => {
-    // https://github.com/facebook/react-native/commit/6d1aca806cee86ad76de771ed3a1cc62982ebcd7
-    subscription?.remove?.();
+    return () => {
+      // https://github.com/facebook/react-native/commit/6d1aca806cee86ad76de771ed3a1cc62982ebcd7
+      subscription?.remove?.();
+    };
   };
 }
 
