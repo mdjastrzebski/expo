@@ -17,6 +17,7 @@ function getTypedRoutesDeclarationFile(ctx) {
     const dynamicRoutes = new Set();
     const dynamicRouteContextKeys = new Set();
     walkRouteNode((0, getRoutes_1.getRoutes)(ctx, {
+        platformRoutes: false, // We don't need to generate platform specific routes
         ignoreEntryPoints: true,
         ignoreRequireErrors: true,
         importMode: 'async',
